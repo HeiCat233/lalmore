@@ -33,9 +33,21 @@
 
 ### 关于中文界面
 
-AS Quail（261 平台）**暂时无法中文化**：官方简体语言包停在 2024.2 平台、Google 打包未内置中文资源、社区兼容包也没有简体。网上"改 plugin.xml 强装旧语言包"的教程跨 4 个大版本，会导致翻译错位甚至崩溃，不要尝试。
+AS Quail（261 平台）官方简体语言包停更、Google 打包未内置中文资源，Marketplace 里也搜不到
+兼容版本。解决方案：采用社区维护的 [sollyu/AndroidStudioChineseLanguagePack](https://github.com/sollyu/AndroidStudioChineseLanguagePack)，
+**该包已由导师安装到 `D:\develop\Android Studio\plugins\zh-261.22158.277.jar`**（适配 AI-261 平台）。
 
-直接用英文界面即可，高频操作对照表如下：
+启用步骤：
+
+1. 重启 Android Studio（若已开着，请完全退出再打开）
+2. **File → Settings → Appearance & Behavior → System Settings → Language and Region**
+3. Language 下拉框此时应出现 **简体中文** → 选中 → OK → 重启 IDE
+
+后续 AS 升级大版本后若界面变回英文，去该项目 [Releases](https://github.com/sollyu/AndroidStudioChineseLanguagePack/releases)
+下载与你 AS 平台版本号匹配的新 jar（如 AS 是 262 就下 zh-262 开头的），删掉旧 jar 放入
+`plugins\` 目录即可。若该社区包将来停更，参考下面的英文对照表也能正常干活。
+
+**高频操作中英对照表（建议收藏）：**
 
 | 你想做的事 | 英文菜单位置 |
 |---|---|
