@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material 3 主题，去掉默认 ActionBar，让地图全屏展示 -->
+    <style name="Theme.NearbyToilet" parent="Theme.Material3.DayNight.NoActionBar" />
+</resources>
