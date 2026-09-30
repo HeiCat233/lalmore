@@ -1,0 +1,18 @@
+# Android 项目标准 .gitignore
+*.iml
+.gradle/
+/local.properties
+.idea/
+.DS_Store
+build/
+/captures
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.keystore
+!debug.keystore
+# Android Studio 本地配置
+/.idea/
+*.ipr
+*.iws
