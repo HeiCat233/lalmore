@@ -47,10 +47,11 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
 
-    // 高德地图 SDK：3D 地图 + 定位 + 搜索（POI 检索用），Maven Central 直接依赖
-    implementation("com.amap.api:3dmap:10.0.600")
-    implementation("com.amap.api:location:11.3.000")
-    implementation("com.amap.api:search:9.7.1")
+    // 高德地图 SDK 三合一组合包（3D地图 11.3.100 + 定位 11.3.000 + POI搜索 9.8.1）
+    // 注意：不要拆成 3dmap/location/search 三个独立依赖——它们各自内嵌了相同的
+    // 公共类（如 com.amap.apis.utils.core.api.*），会触发 Duplicate class 编译错误，
+    // 高德官方发布此组合包专门解决这个问题（可写进报告的集成细节）
+    implementation("com.amap.api:3dmap-location-search:11.3.100_loc11.3.000_sea9.8.1")
 
     // Room：官方 SQLite ORM，负责评价/收藏厕所的本地数据库存储
     implementation("androidx.room:room-runtime:2.6.1")
