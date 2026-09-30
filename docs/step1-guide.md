@@ -31,16 +31,30 @@
    - 只要底部进度条走完、左侧出现 `app` 目录结构、没有红色报错，就是成功。
    - 如果报 `SDK location not found`：确认项目根目录有 `local.properties` 且内容是 `sdk.dir=D:/develop/Android/Sdk`。
 
-### 切换中文界面（可选）
+### 关于中文界面
 
-IDE 本体是英文的。切换方法（切换时 IDE 会自动从 JetBrains 官方源下载语言资源，国内一般可直连）：
+AS Quail（261 平台）**暂时无法中文化**：官方简体语言包停在 2024.2 平台、Google 打包未内置中文资源、社区兼容包也没有简体。网上"改 plugin.xml 强装旧语言包"的教程跨 4 个大版本，会导致翻译错位甚至崩溃，不要尝试。
 
-1. 菜单栏 **File → Settings**（快捷键 Ctrl+Alt+S）
-2. 左侧 **Appearance & Behavior → System Settings → Language and Region**
-3. **Language** 下拉框选择 **简体中文** → 点 OK → 按提示 **Restart IDE**
+直接用英文界面即可，高频操作对照表如下：
 
-重启后界面就是中文。若语言资源下载失败（网络原因），先用英文界面继续，不影响任何功能；
-官方旧版"中文语言包"插件已停更，**不要**去 Marketplace 搜第三方汉化插件安装。
+| 你想做的事 | 英文菜单位置 |
+|---|---|
+| 打开项目 | 欢迎页 **Open**，或 File → Open |
+| 运行 App | 顶部绿色 **▶** 按钮（或 Shift+F10） |
+| 看运行日志 | 底部 **Logcat** 标签，过滤框输入 `MainActivity` 或 `ToiletApp` |
+| 重新同步依赖 | 顶部**大象图标**（Sync Project with Gradle Files），或 File → Sync |
+| 打包 APK | **Build → Build App Bundle(s) / APK(s) → Build APK(s)** |
+| 管理虚拟机 | 右上角设备下拉框旁的 **Device Manager** |
+| 管理 SDK | Settings → Languages & Frameworks → **Android SDK** |
+| 设置代理 | Settings → Appearance & Behavior → System Settings → **HTTP Proxy**（选 No proxy） |
+| 装插件 | Settings → **Plugins** |
+| 改主题字号 | Settings → Appearance & Behavior → **Appearance** |
+| 提交代码 | 左侧 **Commit** 标签（Alt+0），或底部 **Git** 标签看历史 |
+| 全局搜文字 | **Ctrl+Shift+F**（Find in Files） |
+| 重命名变量/文件 | 选中按 **Shift+F6**（Rename） |
+| 项目结构配置 | File → **Project Structure**（Ctrl+Alt+Shift+S） |
+
+常用快捷键：注释 `Ctrl+/`；格式化 `Ctrl+Alt+L`；快速修复 `Alt+Enter`；查找类 `Ctrl+N`。
 
 ## 三、✋ 你要做的第 2 件事：申请高德 Key（约 15 分钟）
 
