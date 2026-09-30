@@ -23,12 +23,24 @@
 ## 二、✋ 你要做的第 1 件事：启动 Android Studio 并打开项目（约 10 分钟）
 
 1. 双击桌面的 **Android Studio** 快捷方式（或运行 `D:\develop\Android Studio\bin\studio64.exe`）。
-2. 首次启动弹「Import Settings」→ 选 **Do not import settings**。
-3. 「Data Sharing」弹窗随意（选 Don't send 也行）。
-4. 进入欢迎页后点 **Open**，选择目录 `D:\develop\lalmore`，点 OK。
-5. 打开项目后右下角会开始 **Gradle Sync**（首次会从阿里云镜像下载依赖，约 3~10 分钟）。
+2. **不会弹出首次设置向导**：已在 `bin\idea.properties` 里配置了
+   `disable.android.first.run=true` 跳过联网检查（SDK 已预装，向导在国内必然失败），
+   会直接进入欢迎页。若某天又弹 SDK 下载报错，检查这个文件该行是否还在。
+3. 进入欢迎页后点 **Open**，选择目录 `D:\develop\lalmore`，点 OK。
+4. 打开项目后右下角会开始 **Gradle Sync**（首次会从阿里云镜像下载依赖，约 3~10 分钟）。
    - 只要底部进度条走完、左侧出现 `app` 目录结构、没有红色报错，就是成功。
    - 如果报 `SDK location not found`：确认项目根目录有 `local.properties` 且内容是 `sdk.dir=D:/develop/Android/Sdk`。
+
+### 切换中文界面（可选）
+
+IDE 本体是英文的。切换方法（切换时 IDE 会自动从 JetBrains 官方源下载语言资源，国内一般可直连）：
+
+1. 菜单栏 **File → Settings**（快捷键 Ctrl+Alt+S）
+2. 左侧 **Appearance & Behavior → System Settings → Language and Region**
+3. **Language** 下拉框选择 **简体中文** → 点 OK → 按提示 **Restart IDE**
+
+重启后界面就是中文。若语言资源下载失败（网络原因），先用英文界面继续，不影响任何功能；
+官方旧版"中文语言包"插件已停更，**不要**去 Marketplace 搜第三方汉化插件安装。
 
 ## 三、✋ 你要做的第 2 件事：申请高德 Key（约 15 分钟）
 
