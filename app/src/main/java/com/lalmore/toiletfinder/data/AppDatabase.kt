@@ -6,12 +6,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 /**
- * Room 数据库入口（v2：新增 users 表，reviews 增加 userId/tags 列）。
+ * Room 数据库入口（v3：reviews 增加 paperStatus/sinkType/cleaned 三列厕所指标）。
  * Room = 官方 SQLite ORM：编译期校验 SQL、把「实体类 ↔ 表」自动映射。
  */
 @Database(
     entities = [ToiletEntity::class, ReviewEntity::class, UserEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

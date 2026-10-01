@@ -6,7 +6,10 @@ import androidx.room.PrimaryKey
 /**
  * 评价实体：对应数据库 reviews 表。
  * 一个厕所（toiletId）可以有多条评价，通过 toiletId 关联查询；
- * v2 起增加 userId 关联发布者、tags 记录用户勾选的设施标签（逗号分隔）。
+ * v3 起每条评价附带三项「厕所指标」快照（类似购房软件的户型指标）：
+ *   paperStatus: -1未填 / 0没纸 / 1偶尔有 / 2充足
+ *   sinkType:    -1未填 / 0无洗手台 / 1公共 / 2独立
+ *   cleaned:     -1未填 / 0无专人 / 1有专人
  */
 @Entity(tableName = "reviews")
 data class ReviewEntity(
@@ -17,5 +20,8 @@ data class ReviewEntity(
     val content: String,
     val createdAt: Long,
     val userId: Long = 0,   // 发布者用户 id（本地账号体系）
-    val tags: String = ""   // 设施标签，逗号分隔，如"纸巾充足,干净卫生"
+    val tags: String = "",  // 设施标签，逗号分隔，如"纸巾充足,干净卫生"
+    val paperStatus: Int = -1,
+    val sinkType: Int = -1,
+    val cleaned: Int = -1
 )
