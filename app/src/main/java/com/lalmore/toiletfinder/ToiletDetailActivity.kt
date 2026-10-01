@@ -14,19 +14,22 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.lalmore.toiletfinder.data.ReviewEntity
 import com.lalmore.toiletfinder.databinding.ActivityToiletDetailBinding
 import com.lalmore.toiletfinder.databinding.SheetPublishReviewBinding
+import com.lalmore.toiletfinder.ui.LoginActivity
 import com.lalmore.toiletfinder.ui.ReviewAdapter
+import com.lalmore.toiletfinder.util.DistanceUtil
+import com.lalmore.toiletfinder.util.SessionManager
 import kotlinx.coroutines.launch
 
 /**
- * 厕所详情页（对应大作业步骤 4~5）：
- *   1. 展示厕所信息与本地评价（Room 查询）
- *   2. 发布评价：BottomSheet 输入昵称/星级/内容 → 落库 → 刷新均分
- *   3. 步行导航：通过高德 URL Scheme 唤起高德地图 App，未安装时回退网页版
+ * 厕所详情页（点评商家页结构）：
+ *   头图 + 信息白卡（星级/分数/评价数/距离/标签）+ 步行导航 + 评价流。
+ *   发布评价需要登录（未登录自动跳登录页），发布带 userId 与设施标签。
  */
 class ToiletDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityToiletDetailBinding
     private lateinit var reviewAdapter: ReviewAdapter
+    private lateinit var session: SessionManager
 
     private lateinit var toiletId: String
     private var toiletLat: Double = 0.0
@@ -37,26 +40,32 @@ class ToiletDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityToiletDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        session = SessionManager(this)
 
         toiletId = intent.getStringExtra(EXTRA_ID) ?: ""
         toiletName = intent.getStringExtra(EXTRA_NAME).orEmpty()
         toiletLat = intent.getDoubleExtra(EXTRA_LAT, 0.0)
         toiletLng = intent.getDoubleExtra(EXTRA_LNG, 0.0)
 
-        binding.tvToiletName.text = toiletName.ifEmpty { "公共厕所" }
-        binding.tvToiletAddress.text = intent.getStringExtra(EXTRA_ADDRESS).orEmpty().ifEmpty { "位置信息待完善" }
+        binding.tvToiletName.text = toiletName.ifEmpty { getString(R.string.default_toilet_name) }
+        binding.tvToiletAddress.text = getString(
+            R.string.address_line,
+            intent.getStringExtra(EXTRA_ADDRESS).orEmpty().ifEmpty { getString(R.string.address_unknown) },
+            DistanceUtil.haversineMeters(session.getLastLat(), session.getLastLng(), toiletLat, toiletLng)
+        )
+        binding.btnBack.setOnClickListener { finish() }
 
         reviewAdapter = ReviewAdapter()
         binding.recyclerReviews.layoutManager = LinearLayoutManager(this)
         binding.recyclerReviews.adapter = reviewAdapter
 
         binding.btnNavigate.setOnClickListener { navigateOnFoot() }
-        binding.fabWriteReview.setOnClickListener { showPublishSheet() }
+        binding.fabWriteReview.setOnClickListener { onWriteReviewClicked() }
 
         loadReviews()
     }
 
-    // ---------- 第五步：评价系统 ----------
+    // ---------- 评价系统 ----------
 
     private fun loadReviews() {
         lifecycleScope.launch {
@@ -65,16 +74,48 @@ class ToiletDetailActivity : AppCompatActivity() {
             reviewAdapter.submitList(reviews)
             binding.tvEmptyReviews.visibility =
                 if (reviews.isEmpty()) View.VISIBLE else View.GONE
+
             if (reviews.isEmpty()) {
                 binding.ratingOverall.rating = 0f
+                binding.tvScore.text = getString(R.string.score_none)
                 binding.tvReviewSummary.text = getString(R.string.review_summary_empty)
+                binding.tvTags.visibility = View.GONE
             } else {
                 val avg = reviews.map { it.rating }.average().toFloat()
                 binding.ratingOverall.rating = avg
-                binding.tvReviewSummary.text = getString(R.string.review_summary, avg, reviews.size)
+                binding.tvScore.text = String.format("%.1f", avg)
+                binding.tvReviewSummary.text =
+                    getString(R.string.review_count_fmt, reviews.size)
+                showTopTags(reviews)
             }
-            Log.d(TAG, "已加载 ${reviews.size} 条评价")
         }
+    }
+
+    /** 统计所有评价勾选的标签，取出现最多的前 3 个展示（点评"大家都在说"风格） */
+    private fun showTopTags(reviews: List<ReviewEntity>) {
+        val counts = reviews
+            .flatMap { it.tags.split(",").map { t -> t.trim() } }
+            .filter { it.isNotEmpty() }
+            .groupBy { it }
+            .mapValues { it.value.size }
+        if (counts.isEmpty()) {
+            binding.tvTags.visibility = View.GONE
+            return
+        }
+        val top = counts.entries.sortedByDescending { it.value }.take(3)
+            .joinToString("  ") { "${it.key} ×${it.value}" }
+        binding.tvTags.text = top
+        binding.tvTags.visibility = View.VISIBLE
+    }
+
+    private fun onWriteReviewClicked() {
+        if (!session.isLoggedIn()) {
+            // 未登录：引导去登录（登录成功返回后自动带上身份）
+            Toast.makeText(this, R.string.login_required, Toast.LENGTH_SHORT).show()
+            startActivity(Intent(this, LoginActivity::class.java))
+            return
+        }
+        showPublishSheet()
     }
 
     private fun showPublishSheet() {
@@ -82,19 +123,28 @@ class ToiletDetailActivity : AppCompatActivity() {
         val sheetBinding = SheetPublishReviewBinding.inflate(LayoutInflater.from(this))
         sheet.setContentView(sheetBinding.root)
 
+        sheetBinding.tvIdentity.text = getString(R.string.publish_identity, session.getNickname())
         sheetBinding.btnSubmit.setOnClickListener {
-            val nickname = sheetBinding.etNickname.text.toString().trim().ifEmpty { "匿名用户" }
             val content = sheetBinding.etContent.text.toString().trim()
             if (content.isEmpty()) {
                 sheetBinding.etContent.error = getString(R.string.review_content_required)
                 return@setOnClickListener
             }
+            // 勾选的标签取文字，逗号拼接入库（ChipGroup 只回传 id，需反查文本）
+            val tags = sheetBinding.chipGroupTags.checkedChipIds
+                .mapNotNull { id ->
+                    sheetBinding.root.findViewById<com.google.android.material.chip.Chip>(id)?.text?.toString()
+                }
+                .joinToString(",")
+
             val review = ReviewEntity(
                 toiletId = toiletId,
-                userName = nickname,
+                userName = session.getNickname(),
                 rating = sheetBinding.rbStars.progress.takeIf { it > 0 } ?: 5,
                 content = content,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                userId = session.getUserId(),
+                tags = tags
             )
             lifecycleScope.launch {
                 (application as ToiletApp).database.reviewDao().insert(review)
@@ -106,16 +156,10 @@ class ToiletDetailActivity : AppCompatActivity() {
         sheet.show()
     }
 
-    // ---------- 第四步：步行导航 ----------
+    // ---------- 步行导航（URL Scheme + 网页回退） ----------
 
-    /**
-     * 原理（答辩可讲）：App 间跳转用的是 Android 的隐式 Intent + URL Scheme。
-     * 高德地图注册了 amapuri:// 协议，带坐标参数即可直接进入导航规划页；
-     * 若手机未安装高德 App，startActivity 会抛 ActivityNotFoundException，
-     * 此时回退到 uri.amap.com 网页版导航（无需任何 App）。
-     */
     private fun navigateOnFoot() {
-        val name = Uri.encode(toiletName.ifEmpty { "目的地" })
+        val name = Uri.encode(toiletName.ifEmpty { getString(R.string.default_destination) })
         val amapUri = Uri.parse(
             "amapuri://route/plan/?dlat=$toiletLat&dlon=$toiletLng&dname=$name&dev=0&t=2"
         )
@@ -128,7 +172,7 @@ class ToiletDetailActivity : AppCompatActivity() {
             try {
                 startActivity(Intent(Intent.ACTION_VIEW, webUri))
             } catch (e2: Exception) {
-                Toast.makeText(this, "没有可用的浏览器", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.no_browser, Toast.LENGTH_SHORT).show()
             }
         }
     }

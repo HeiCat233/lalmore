@@ -46,6 +46,7 @@
                 android:layout_marginStart="8dp"
                 android:isIndicator="true"
                 android:numStars="5"
+                android:progressTint="@color/star_orange"
                 android:stepSize="1" />
 
             <TextView
