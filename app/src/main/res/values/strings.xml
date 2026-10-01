@@ -65,6 +65,29 @@
     <string name="default_destination">目的地</string>
     <string name="no_browser">没有可用的浏览器</string>
 
+    <!-- 厕所指标（购房软件式） -->
+    <string name="metrics_title">厕所指标</string>
+    <string name="metrics_source_fmt">来自最近 %1$d 条评价</string>
+    <string name="metrics_pick_title">顺手填三项指标（帮后来人避坑）</string>
+    <string name="metric_paper">厕纸供应</string>
+    <string name="metric_sink">洗手台</string>
+    <string name="metric_clean">清理除味</string>
+    <string name="paper_2">充足</string>
+    <string name="paper_1">偶尔有</string>
+    <string name="paper_0">没纸</string>
+    <string name="sink_2">独立</string>
+    <string name="sink_1">公共</string>
+    <string name="sink_0">无</string>
+    <string name="clean_1">有专人</string>
+    <string name="clean_0">无专人</string>
+    <string name="metric_stat_fmt">%1$d/%2$d 人</string>
+
+    <!-- 演示数据 -->
+    <string name="demo_generate">生成演示数据（测试账号+随机评价）</string>
+    <string name="demo_confirm_title">生成演示数据</string>
+    <string name="demo_confirm_msg">将清空现有评价并重新生成一批随机评价与厕所指标（不影响厕所列表），用于演示。确定？</string>
+    <string name="do_generate">生成</string>
+
     <!-- 定位与搜索 -->
     <string name="location_denied">未授予定位权限，无法搜索附近厕所</string>
     <string name="search_failed">周边搜索失败，请检查网络后重试</string>

@@ -16,6 +16,7 @@ import com.lalmore.toiletfinder.databinding.ActivityToiletDetailBinding
 import com.lalmore.toiletfinder.databinding.SheetPublishReviewBinding
 import com.lalmore.toiletfinder.ui.LoginActivity
 import com.lalmore.toiletfinder.ui.ReviewAdapter
+import com.lalmore.toiletfinder.ui.ToiletBlockColors
 import com.lalmore.toiletfinder.util.DistanceUtil
 import com.lalmore.toiletfinder.util.SessionManager
 import kotlinx.coroutines.launch
@@ -53,6 +54,8 @@ class ToiletDetailActivity : AppCompatActivity() {
             intent.getStringExtra(EXTRA_ADDRESS).orEmpty().ifEmpty { getString(R.string.address_unknown) },
             DistanceUtil.haversineMeters(session.getLastLat(), session.getLastLng(), toiletLat, toiletLng)
         )
+        // 头图与首页列表色块同色：列表里认准颜色，点进来颜色一致
+        binding.headBanner.setBackgroundResource(ToiletBlockColors.blockFor(toiletId))
         binding.btnBack.setOnClickListener { finish() }
 
         reviewAdapter = ReviewAdapter()
@@ -88,8 +91,71 @@ class ToiletDetailActivity : AppCompatActivity() {
                     getString(R.string.review_count_fmt, reviews.size)
                 showTopTags(reviews)
             }
+            showMetrics(reviews)
         }
     }
+
+    /** 厕所指标卡（购房软件式三格）：结论取最近一条评价，统计来自所有人 */
+    private fun showMetrics(reviews: List<ReviewEntity>) {
+        val paperReviews = reviews.filter { it.paperStatus >= 0 }
+        val sinkReviews = reviews.filter { it.sinkType >= 0 }
+        val cleanReviews = reviews.filter { it.cleaned >= 0 }
+
+        if (paperReviews.isEmpty() && sinkReviews.isEmpty() && cleanReviews.isEmpty()) {
+            binding.cardMetrics.visibility = View.GONE
+            return
+        }
+        binding.cardMetrics.visibility = View.VISIBLE
+        binding.tvMetricsSource.text = getString(R.string.metrics_source_fmt, reviews.size)
+
+        val paperLatest = paperReviews.firstOrNull()?.paperStatus ?: -1
+        binding.tvMetricPaper.text = paperLabel(paperLatest)
+        binding.tvMetricPaperStat.text = getString(
+            R.string.metric_stat_fmt,
+            paperReviews.count { it.paperStatus == 2 },
+            paperReviews.size
+        )
+        val sinkLatest = sinkReviews.firstOrNull()?.sinkType ?: -1
+        binding.tvMetricSink.text = sinkLabel(sinkLatest)
+        binding.tvMetricSinkStat.text = getString(
+            R.string.metric_stat_fmt,
+            sinkReviews.count { it.sinkType == 1 },
+            sinkReviews.size
+        )
+        val cleanLatest = cleanReviews.firstOrNull()?.cleaned ?: -1
+        binding.tvMetricClean.text = cleanLabel(cleanLatest)
+        binding.tvMetricCleanStat.text = getString(
+            R.string.metric_stat_fmt,
+            cleanReviews.count { it.cleaned == 1 },
+            cleanReviews.size
+        )
+    }
+
+    private fun paperLabel(v: Int) = getString(
+        when (v) {
+            2 -> R.string.paper_2
+            1 -> R.string.paper_1
+            0 -> R.string.paper_0
+            else -> R.string.score_none
+        }
+    )
+
+    private fun sinkLabel(v: Int) = getString(
+        when (v) {
+            2 -> R.string.sink_2
+            1 -> R.string.sink_1
+            0 -> R.string.sink_0
+            else -> R.string.score_none
+        }
+    )
+
+    private fun cleanLabel(v: Int) = getString(
+        when (v) {
+            1 -> R.string.clean_1
+            0 -> R.string.clean_0
+            else -> R.string.score_none
+        }
+    )
 
     /** 统计所有评价勾选的标签，取出现最多的前 3 个展示（点评"大家都在说"风格） */
     private fun showTopTags(reviews: List<ReviewEntity>) {
@@ -123,6 +189,11 @@ class ToiletDetailActivity : AppCompatActivity() {
         val sheetBinding = SheetPublishReviewBinding.inflate(LayoutInflater.from(this))
         sheet.setContentView(sheetBinding.root)
 
+        // 指标默认选中第一项（演示时不易空值）
+        sheetBinding.tgPaper.check(R.id.btn_paper_ok)
+        sheetBinding.tgSink.check(R.id.btn_sink_public)
+        sheetBinding.tgClean.check(R.id.btn_clean_yes)
+
         sheetBinding.tvIdentity.text = getString(R.string.publish_identity, session.getNickname())
         sheetBinding.btnSubmit.setOnClickListener {
             val content = sheetBinding.etContent.text.toString().trim()
@@ -136,6 +207,24 @@ class ToiletDetailActivity : AppCompatActivity() {
                     sheetBinding.root.findViewById<com.google.android.material.chip.Chip>(id)?.text?.toString()
                 }
                 .joinToString(",")
+            // 三项指标：ToggleGroup 单选 → 映射数值入库
+            val paper = when (sheetBinding.tgPaper.checkedButtonId) {
+                R.id.btn_paper_ok -> 2
+                R.id.btn_paper_mid -> 1
+                R.id.btn_paper_no -> 0
+                else -> -1
+            }
+            val sink = when (sheetBinding.tgSink.checkedButtonId) {
+                R.id.btn_sink_public -> 1
+                R.id.btn_sink_private -> 2
+                R.id.btn_sink_none -> 0
+                else -> -1
+            }
+            val clean = when (sheetBinding.tgClean.checkedButtonId) {
+                R.id.btn_clean_yes -> 1
+                R.id.btn_clean_no -> 0
+                else -> -1
+            }
 
             val review = ReviewEntity(
                 toiletId = toiletId,
@@ -144,7 +233,10 @@ class ToiletDetailActivity : AppCompatActivity() {
                 content = content,
                 createdAt = System.currentTimeMillis(),
                 userId = session.getUserId(),
-                tags = tags
+                tags = tags,
+                paperStatus = paper,
+                sinkType = sink,
+                cleaned = clean
             )
             lifecycleScope.launch {
                 (application as ToiletApp).database.reviewDao().insert(review)
