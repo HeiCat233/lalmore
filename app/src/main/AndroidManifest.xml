@@ -48,5 +48,13 @@
         <activity
             android:name=".ToiletDetailActivity"
             android:exported="false" />
+
+        <activity
+            android:name=".ui.MapActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".ui.LoginActivity"
+            android:exported="false" />
     </application>
 </manifest>
