@@ -1,36 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 主界面：上方地图 + 底部"附近厕所"列表，构成产品主框架 -->
+<!-- 主框架：Fragment 容器 + 底部导航（首页/榜单/我的） -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <com.amap.api.maps.MapView
-        android:id="@+id/map_view"
+    <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="0.56" />
+        android:layout_weight="1" />
 
-    <TextView
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/white"
-        android:paddingStart="16dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="4dp"
-        android:text="@string/nearby_toilets_title"
-        android:textColor="@color/brand_dark"
-        android:textSize="15sp"
-        android:textStyle="bold" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_toilets"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="0.44"
-        android:background="@color/white"
-        android:clipToPadding="false"
-        android:paddingBottom="8dp" />
-
+        app:itemIconTint="@color/color_nav_item"
+        app:itemTextColor="@color/color_nav_item"
+        app:labelVisibilityMode="labeled"
+        app:menu="@menu/bottom_nav" />
 </LinearLayout>
