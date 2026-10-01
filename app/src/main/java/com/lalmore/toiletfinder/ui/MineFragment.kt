@@ -41,6 +41,20 @@ class MineFragment : Fragment() {
                 startActivity(Intent(requireContext(), LoginActivity::class.java))
             }
         }
+        binding.rowDemo.setOnClickListener {
+            AlertDialog.Builder(requireContext())
+                .setTitle(R.string.demo_confirm_title)
+                .setMessage(R.string.demo_confirm_msg)
+                .setPositiveButton(R.string.do_generate) { _, _ ->
+                    viewLifecycleOwner.lifecycleScope.launch {
+                        val summary = com.lalmore.toiletfinder.util.DemoDataGenerator.generate(requireContext())
+                        android.widget.Toast.makeText(requireContext(), summary, android.widget.Toast.LENGTH_LONG).show()
+                        refresh()
+                    }
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
         binding.rowLogout.setOnClickListener {
             AlertDialog.Builder(requireContext())
                 .setTitle(R.string.logout_confirm_title)
