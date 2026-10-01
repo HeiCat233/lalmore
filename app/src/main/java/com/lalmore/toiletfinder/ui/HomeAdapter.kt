@@ -36,14 +36,8 @@ class HomeAdapter(
         }
         holder.binding.tvReviewCount.text =
             holder.binding.root.context.getString(R.string.review_count_fmt, item.reviewCount)
-        // 色块按 id 稳定取色：同一厕所刷新后颜色不变，列表整体四色节奏轮换
-        val blocks = intArrayOf(
-            R.drawable.bg_block_teal, R.drawable.bg_block_sky,
-            R.drawable.bg_block_violet, R.drawable.bg_block_coral
-        )
-        holder.binding.flBlock.setBackgroundResource(
-            blocks[Math.abs(item.id.hashCode()) % blocks.size]
-        )
+        // 色块按 id 稳定取色：同一厕所刷新后颜色不变，详情页头图同色联动
+        holder.binding.flBlock.setBackgroundResource(ToiletBlockColors.blockFor(item.id))
         holder.binding.root.setOnClickListener { onClick(item) }
     }
 
