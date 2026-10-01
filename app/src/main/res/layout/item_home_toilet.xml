@@ -17,9 +17,10 @@
         android:padding="12dp">
 
         <FrameLayout
+            android:id="@+id/fl_block"
             android:layout_width="68dp"
             android:layout_height="68dp"
-            android:background="@drawable/bg_head_banner">
+            android:background="@drawable/bg_block_teal">
 
             <TextView
                 android:layout_width="wrap_content"

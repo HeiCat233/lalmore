@@ -122,8 +122,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
+                    android:background="@drawable/bg_btn_gradient"
                     android:text="@string/navigate_on_foot"
-                    app:backgroundTint="@color/brand_dark" />
+                    android:textColor="@color/white" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
