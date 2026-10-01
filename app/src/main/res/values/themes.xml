@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Material 3 主题，去掉默认 ActionBar，让地图全屏展示 -->
-    <style name="Theme.NearbyToilet" parent="Theme.Material3.DayNight.NoActionBar" />
+    <!-- Material 3 主题：去掉 ActionBar，全局浅灰底衬托白色卡片（点评式信息流） -->
+    <style name="Theme.NearbyToilet" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/bg_gray</item>
+        <item name="colorPrimary">@color/brand_primary</item>
+        <item name="android:statusBarColor">@color/brand_primary</item>
+    </style>
 </resources>
