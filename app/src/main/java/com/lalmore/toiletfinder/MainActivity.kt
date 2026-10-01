@@ -1,6 +1,7 @@
 package com.lalmore.toiletfinder
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -9,40 +10,70 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.maps.AMap
+import com.amap.api.maps.model.BitmapDescriptorFactory
+import com.amap.api.maps.model.LatLng
+import com.amap.api.maps.model.Marker
+import com.amap.api.maps.model.MarkerOptions
 import com.amap.api.maps.model.MyLocationStyle
+import com.amap.api.services.core.PoiItem
+import com.amap.api.services.core.LatLonPoint
+import com.amap.api.services.poisearch.PoiResult
+import com.amap.api.services.poisearch.PoiSearch
 import com.lalmore.toiletfinder.data.ReviewEntity
+import com.lalmore.toiletfinder.data.ToiletEntity
 import com.lalmore.toiletfinder.databinding.ActivityMainBinding
+import com.lalmore.toiletfinder.model.ToiletItem
+import com.lalmore.toiletfinder.ui.ToiletAdapter
+import com.lalmore.toiletfinder.util.DistanceUtil
+import com.lalmore.toiletfinder.util.PrefsHelper
 import kotlinx.coroutines.launch
 
 /**
- * 第一步的验收页面：全屏高德地图 + 定位蓝点 + 一次单点定位 + Room 冒烟测试。
- * 后续步骤会在此基础上叠加「底部厕所列表」「详情页」「导航按钮」等 UI。
+ * 主界面核心流程（对应大作业步骤 2~4）：
+ *   定位成功 → 以当前位置为圆心发起 POI 周边搜索"公共厕所"（半径 3km）
+ *   → Haversine 计算距离并按由近到远排序 → 地图打 Marker + 底部列表渲染
+ *   → 搜索结果缓存进 Room（数据存储评分点），并回填本地平均评分
+ * 点击列表项 / 地图 Marker → 进入厕所详情页（评价 + 步行导航）。
  */
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), PoiSearch.OnPoiSearchListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var amap: AMap
     private lateinit var locationClient: AMapLocationClient
+    private lateinit var toiletAdapter: ToiletAdapter
+    private lateinit var prefs: PrefsHelper
+
+    private var userLat: Double = 0.0
+    private var userLng: Double = 0.0
+    // uid → Marker 映射，点击地图 Marker 时反查对应的厕所数据
+    private val markerIndex = mutableMapOf<String, Marker>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // MapView 生命周期必须与 Activity 绑定，否则地图不渲染或内存泄漏
+        prefs = PrefsHelper(this)
         binding.mapView.onCreate(savedInstanceState)
         amap = binding.mapView.map
 
+        setupRecyclerView()
         requestLocationPermissionThenEnableBlueDot()
-        startOneShotLocation()
-        runRoomSmokeTest()
     }
 
-    // ---------- 定位 ----------
+    // ---------- 第二步：UI 框架 ----------
 
-    /** Android 6.0+ 定位权限必须运行时申请，授权后才能开蓝点 */
+    private fun setupRecyclerView() {
+        toiletAdapter = ToiletAdapter(::openDetail)
+        binding.recyclerToilets.layoutManager = LinearLayoutManager(this)
+        binding.recyclerToilets.adapter = toiletAdapter
+    }
+
+    // ---------- 定位（第三步的数据源） ----------
+
     private fun requestLocationPermissionThenEnableBlueDot() {
         val granted = ContextCompat.checkSelfPermission(
             this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -72,34 +103,29 @@ class MainActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 enableMyLocationBlueDot()
             } else {
-                Toast.makeText(this, "未授予定位权限，地图蓝点不可用", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "未授予定位权限，无法搜索附近厕所", Toast.LENGTH_LONG).show()
             }
         }
     }
 
-    /** 开启地图自带的「定位蓝点」图层：连续定位并把当前位置画到地图上 */
     private fun enableMyLocationBlueDot() {
         val style = MyLocationStyle().apply {
-            // 只定位、不移动镜头：显示蓝点但由用户手动控制视野
             myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE_NO_CENTER)
-            // 定位间隔 2 秒
             interval(2000)
         }
         amap.myLocationStyle = style
         amap.isMyLocationEnabled = true
-        Log.d(TAG, "定位蓝点已开启")
-    }
 
-    /** 单次定位：拿到经纬度（后续 POI 搜索就靠它算「附近」） */
-    private fun startOneShotLocation() {
+        // 单次定位拿到经纬度后触发周边搜索
         locationClient = AMapLocationClient(applicationContext)
         locationClient.setLocationListener { location ->
             if (location.errorCode == 0) {
-                Log.i(
-                    TAG,
-                    "单点定位成功: lat=${location.latitude}, lng=${location.longitude}, 精度≈${location.accuracy}m"
-                )
+                userLat = location.latitude
+                userLng = location.longitude
+                Log.i(TAG, "定位成功: lat=$userLat, lng=$userLng, 精度≈${location.accuracy}m")
                 locationClient.stopLocation()
+                amap.moveCamera(com.amap.api.maps.CameraUpdateFactory.newLatLngZoom(LatLng(userLat, userLng), 15f))
+                searchNearbyToilets()
             } else {
                 Log.e(TAG, "定位失败: code=${location.errorCode}, info=${location.errorInfo}")
             }
@@ -107,28 +133,102 @@ class MainActivity : AppCompatActivity() {
         locationClient.startLocation()
     }
 
-    // ---------- 数据存储冒烟测试 ----------
+    // ---------- 第三步：POI 周边搜索 ----------
 
-    /** 往 Room 写一条测试评价再读出来，验证「数据存储」链路通了 */
-    private fun runRoomSmokeTest() {
-        lifecycleScope.launch {
-            try {
-                val db = (application as ToiletApp).database
-                val review = ReviewEntity(
-                    toiletId = "TEST001",
-                    userName = "冒烟测试",
-                    rating = 5,
-                    content = "环境干净，纸巾充足，强烈推荐",
-                    createdAt = System.currentTimeMillis()
-                )
-                db.reviewDao().insert(review)
-                val reviews = db.reviewDao().getAll()
-                Log.i(TAG, "Room 验证通过：共 ${reviews.size} 条评价，最新一条：${reviews.first().content}")
-                Toast.makeText(this@MainActivity, "数据库写入读取成功", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Log.e(TAG, "Room 验证失败", e)
-            }
+    private fun searchNearbyToilets() {
+        // 记录最近一次搜索关键词（SharedPreferences 文件存储演示）
+        prefs.saveLastKeyword("公共厕所")
+
+        val query = PoiSearch.Query("公共厕所", "", "")
+        query.pageSize = 20
+        query.pageNum = 1
+        val poiSearch = PoiSearch(this, query)
+        // 周边搜索模式：以用户为圆心、半径 3km 的圆形范围
+        poiSearch.bound = PoiSearch.SearchBound(LatLonPoint(userLat, userLng), 3000)
+        poiSearch.setOnPoiSearchListener(this)
+        poiSearch.searchPOIAsyn()
+        Log.d(TAG, "已发起周边搜索: 半径3000m, 关键词=公共厕所")
+    }
+
+    override fun onPoiSearched(result: PoiResult?, code: Int) {
+        // 高德 SDK 回调已在主线程
+        if (code != 1000 || result == null) {
+            Log.e(TAG, "POI 搜索失败: code=$code（1000=成功）")
+            Toast.makeText(this, "周边搜索失败，请检查网络后重试", Toast.LENGTH_SHORT).show()
+            return
         }
+        val pois = result.pois.orEmpty().filter { it.latLonPoint != null }
+        Log.i(TAG, "POI 搜索成功: ${pois.size} 条结果")
+
+        val items = pois.map { poi ->
+            ToiletItem(
+                id = poi.poiId,
+                name = poi.title,
+                address = poi.snippet,
+                lat = poi.latLonPoint.latitude,
+                lng = poi.latLonPoint.longitude,
+                distanceM = DistanceUtil.haversineMeters(userLat, userLng, poi.latLonPoint.latitude, poi.latLonPoint.longitude),
+                rating = 0f
+            )
+        }.sortedBy { it.distanceM }
+
+        renderMarkers(items)
+        cacheAndShow(items)
+    }
+
+    override fun onPoiItemSearched(poiItem: PoiItem?, code: Int) = Unit
+
+    // ---------- 渲染与数据缓存 ----------
+
+    private fun renderMarkers(items: List<ToiletItem>) {
+        amap.clear(true)
+        markerIndex.clear()
+        items.forEach { item ->
+            val marker = amap.addMarker(
+                MarkerOptions()
+                    .position(LatLng(item.lat, item.lng))
+                    .title(item.name)
+                    .snippet(item.address)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+            )
+            markerIndex[item.id] = marker
+        }
+        amap.setOnMarkerClickListener { marker ->
+            // 通过反向映射把 Marker 对应的列表项找出来
+            markerIndex.entries.firstOrNull { it.value.id == marker.id }?.let { (uid, _) ->
+                items.firstOrNull { it.id == uid }?.let { openDetail(it) }
+            }
+            true
+        }
+    }
+
+    private fun cacheAndShow(items: List<ToiletItem>) {
+        lifecycleScope.launch {
+            val db = (application as ToiletApp).database
+            // 1. 搜索结果落库：toilets 表按 uid 覆盖写入（数据存储评分点）
+            db.toiletDao().insertAll(
+                items.map { ToiletEntity(it.id, it.name, it.address, it.lat, it.lng, System.currentTimeMillis()) }
+            )
+            // 2. 回填每间厕所的本地评价均分后再刷新列表
+            val rated = items.map { item ->
+                val ratings = db.reviewDao().getByToiletId(item.id).map { it.rating }
+                val avg = if (ratings.isEmpty()) 0.0 else ratings.average()
+                item.copy(rating = avg.toFloat())
+            }
+            toiletAdapter.submitList(rated)
+        }
+    }
+
+    // ---------- 第四步入口：跳详情页 ----------
+
+    private fun openDetail(item: ToiletItem) {
+        startActivity(Intent(this, ToiletDetailActivity::class.java).apply {
+            putExtra(ToiletDetailActivity.EXTRA_ID, item.id)
+            putExtra(ToiletDetailActivity.EXTRA_NAME, item.name)
+            putExtra(ToiletDetailActivity.EXTRA_ADDRESS, item.address)
+            putExtra(ToiletDetailActivity.EXTRA_LAT, item.lat)
+            putExtra(ToiletDetailActivity.EXTRA_LNG, item.lng)
+        })
     }
 
     // ---------- 生命周期 ----------
@@ -149,7 +249,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        locationClient.onDestroy()
+        if (::locationClient.isInitialized) {
+            locationClient.onDestroy()
+        }
         binding.mapView.onDestroy()
         super.onDestroy()
     }
