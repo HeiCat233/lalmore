@@ -15,4 +15,10 @@ interface ReviewDao {
 
     @Query("SELECT * FROM reviews WHERE toiletId = :toiletId ORDER BY createdAt DESC")
     suspend fun getByToiletId(toiletId: String): List<ReviewEntity>
+
+    @Query("SELECT * FROM reviews WHERE userId = :userId ORDER BY createdAt DESC")
+    suspend fun getByUserId(userId: Long): List<ReviewEntity>
+
+    @Query("SELECT COUNT(*) FROM reviews WHERE userId = :userId")
+    suspend fun countByUserId(userId: Long): Int
 }

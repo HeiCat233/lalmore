@@ -6,19 +6,19 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 /**
- * Room 数据库入口。
- * Room = 官方 SQLite ORM：编译期校验 SQL、把「实体类 ↔ 表」自动映射，
- * 避免手写 SQLiteOpenHelper 的模板代码和 SQL 拼接错误。
+ * Room 数据库入口（v2：新增 users 表，reviews 增加 userId/tags 列）。
+ * Room = 官方 SQLite ORM：编译期校验 SQL、把「实体类 ↔ 表」自动映射。
  */
 @Database(
-    entities = [ToiletEntity::class, ReviewEntity::class],
-    version = 1,
+    entities = [ToiletEntity::class, ReviewEntity::class, UserEntity::class],
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun toiletDao(): ToiletDao
     abstract fun reviewDao(): ReviewDao
+    abstract fun userDao(): UserDao
 
     companion object {
         @Volatile
@@ -32,7 +32,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "toilet.db"
                 )
-                    // 版本升级但没写迁移脚本时，直接重建表（开发期方便，上线前应换成正式 Migration）
+                    // v1→v2 未写迁移脚本：开发期直接重建表（演示前需重新录入评价），
+                    // 上线前应换成正式 Migration 保留用户数据
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }

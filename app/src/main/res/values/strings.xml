@@ -1,23 +1,88 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">附近厕所</string>
+    <string name="app_slogan">定位你身边的干净厕所</string>
+    <string name="back">返回</string>
+    <string name="cancel">取消</string>
 
-    <!-- 主界面 -->
+    <!-- 底部导航 -->
+    <string name="tab_home">首页</string>
+    <string name="tab_ranking">榜单</string>
+    <string name="tab_mine">我的</string>
+
+    <!-- 首页 -->
+    <string name="locating">定位中…</string>
+    <string name="city_unknown">位置未知</string>
+    <string name="home_search_hint">搜索附近厕所名称</string>
+    <string name="kong_map">地图找厕所</string>
+    <string name="kong_ranking">排行榜</string>
+    <string name="kong_history">搜索历史</string>
+    <string name="history_title">搜索历史</string>
+    <string name="history_empty">暂无搜索历史</string>
     <string name="nearby_toilets_title">附近厕所 · 按距离由近到远</string>
     <string name="distance_label">距离</string>
+    <string name="address_unknown">位置信息待完善</string>
+    <string name="score_none">暂无</string>
+    <string name="review_count_fmt">%1$d条评价</string>
+
+    <!-- 登录注册 -->
+    <string name="login_title">欢迎回来</string>
+    <string name="register_title">创建账号</string>
+    <string name="username_hint">用户名</string>
+    <string name="password_hint">密码（至少 6 位）</string>
+    <string name="nickname_hint_login">昵称（可留空，默认同用户名）</string>
+    <string name="do_login">登 录</string>
+    <string name="do_register">注 册</string>
+    <string name="switch_to_register">没有账号？去注册</string>
+    <string name="switch_to_login">已有账号？去登录</string>
+    <string name="username_too_short">用户名至少 3 个字符</string>
+    <string name="password_too_short">密码至少 6 位</string>
+    <string name="username_taken">用户名已被注册</string>
+    <string name="login_failed">用户名或密码错误</string>
+    <string name="login_ok_welcome">登录成功，你好 %1$s！</string>
+    <string name="register_ok_welcome">注册成功，欢迎 %1$s！</string>
+    <string name="login_required">先登录再发布评价哦</string>
+    <string name="publish_identity">以「%1$s」的身份发布</string>
 
     <!-- 详情页 -->
+    <string name="default_toilet_name">公共厕所</string>
+    <string name="address_line">地址：%1$s · 距你约 %2$d 米</string>
     <string name="navigate_on_foot">步行导航前往</string>
     <string name="user_reviews_title">用户评价</string>
     <string name="no_reviews_yet">还没有评价，来抢沙发吧～</string>
     <string name="write_review">写评价</string>
     <string name="review_summary_empty">暂无评分</string>
-    <string name="review_summary">%.1f 分 · %d 条评价</string>
-
-    <!-- 发布评价弹窗 -->
-    <string name="nickname_hint">你的昵称（可留空为匿名）</string>
+    <string name="tags_title">大家都在说（可多选）</string>
+    <string name="tag_paper">纸巾充足</string>
+    <string name="tag_clean">干净卫生</string>
+    <string name="tag_free">免费</string>
+    <string name="tag_easy_find">好找</string>
+    <string name="tag_no_queue">不用排队</string>
     <string name="review_content_hint">说说这里的环境怎么样…</string>
     <string name="publish">发布评价</string>
     <string name="review_content_required">写点内容再发布吧</string>
     <string name="review_published">评价已发布，感谢分享！</string>
+    <string name="default_destination">目的地</string>
+    <string name="no_browser">没有可用的浏览器</string>
+
+    <!-- 定位与搜索 -->
+    <string name="location_denied">未授予定位权限，无法搜索附近厕所</string>
+    <string name="search_failed">周边搜索失败，请检查网络后重试</string>
+
+    <!-- 榜单 -->
+    <string name="ranking_title">厕所排行榜</string>
+    <string name="tab_best">好评榜</string>
+    <string name="tab_hot">热评榜</string>
+    <string name="ranking_empty">还没有评价数据，去发第一条评价吧～</string>
+    <string name="ranking_meta">%1$d条评价</string>
+
+    <!-- 我的 -->
+    <string name="mine_not_logged_in">点击登录</string>
+    <string name="mine_guest_tip">登录后可发布评价、参与榜单</string>
+    <string name="mine_logged_in_tip">账号：%1$s</string>
+    <string name="my_reviews_title">我的评价</string>
+    <string name="my_collection_label">收藏</string>
+    <string name="logout">退出登录</string>
+    <string name="logout_confirm_title">退出登录</string>
+    <string name="logout_confirm_msg">确定要退出当前账号吗？</string>
 </resources>
