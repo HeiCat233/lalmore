@@ -1,4 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">附近厕所</string>
+
+    <!-- 主界面 -->
+    <string name="nearby_toilets_title">附近厕所 · 按距离由近到远</string>
+    <string name="distance_label">距离</string>
+
+    <!-- 详情页 -->
+    <string name="navigate_on_foot">步行导航前往</string>
+    <string name="user_reviews_title">用户评价</string>
+    <string name="no_reviews_yet">还没有评价，来抢沙发吧～</string>
+    <string name="write_review">写评价</string>
+    <string name="review_summary_empty">暂无评分</string>
+    <string name="review_summary">%.1f 分 · %d 条评价</string>
+
+    <!-- 发布评价弹窗 -->
+    <string name="nickname_hint">你的昵称（可留空为匿名）</string>
+    <string name="review_content_hint">说说这里的环境怎么样…</string>
+    <string name="publish">发布评价</string>
+    <string name="review_content_required">写点内容再发布吧</string>
+    <string name="review_published">评价已发布，感谢分享！</string>
 </resources>
