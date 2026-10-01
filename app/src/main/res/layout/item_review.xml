@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 列表项评价：头像 + 昵称星级时间 + 内容 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="8dp">
+
+    <TextView
+        android:id="@+id/tv_avatar"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_wc_badge"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_reviewer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#1B1B1B"
+                android:textSize="13sp"
+                android:textStyle="bold" />
+
+            <RatingBar
+                android:id="@+id/rating_bar"
+                style="?android:attr/ratingBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:isIndicator="true"
+                android:numStars="5"
+                android:stepSize="1" />
+
+            <TextView
+                android:id="@+id/tv_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:alpha="0.45"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:textSize="13sp" />
+    </LinearLayout>
+</LinearLayout>

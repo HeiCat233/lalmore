@@ -33,7 +33,7 @@
         -->
         <meta-data
             android:name="com.amap.api.v2.apikey"
-            android:value="YOUR_AMAP_KEY" />
+            android:value="4dfd2e4a1e04f6b2bc10335aecd10225" />
 
         <activity
             android:name=".MainActivity"
@@ -43,5 +43,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 详情页仅由 App 内部启动，无需对外暴露 -->
+        <activity
+            android:name=".ToiletDetailActivity"
+            android:exported="false" />
     </application>
 </manifest>
