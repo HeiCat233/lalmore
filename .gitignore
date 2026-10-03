@@ -18,3 +18,5 @@ build/
 *.iws
 # ZCode 本地工作文件
 .zcode/
+_build/node_modules/
+_tmp_docs/
